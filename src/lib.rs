@@ -81,7 +81,7 @@ impl DntFileReader {
 
         for _ in 1..columns_nb {
             let text = self.read_string();
-            let raw_data_type = self.read_byte();
+            let raw_data_type = self.read_u8();
             let data_type = DntDataType::from_u8(raw_data_type);
             let column = DntColumn {
                 text,
@@ -133,7 +133,7 @@ impl DntFileReader {
         self.file.read_f32::<LittleEndian>().unwrap()
     }
 
-    fn read_byte(&mut self) -> u8 {
+    fn read_u8(&mut self) -> u8 {
         self.file.read_u8().unwrap()
     }
 
@@ -143,7 +143,7 @@ impl DntFileReader {
         if length > 0 {
             let mut result = String::with_capacity(length);
             for index in 0..length {
-                result.insert(index, self.read_byte() as char);
+                result.insert(index, self.read_u8() as char);
             }
             result
         } else {
@@ -162,10 +162,10 @@ impl DntFileWriter {
     }
 
     pub fn write(&mut self, table: &DntTable) -> Result<(), Box<dyn Error>> {
-        self.write_byte(0);
-        self.write_byte(0);
-        self.write_byte(0);
-        self.write_byte(0);
+        self.write_u8(0);
+        self.write_u8(0);
+        self.write_u8(0);
+        self.write_u8(0);
 
         self.write_u16(table.head.len() as u16 - 1);
         self.write_u32(table.body.len() as u32);
@@ -173,7 +173,7 @@ impl DntFileWriter {
         for column_index in 1..table.head.len() {
             let column = table.head.get(column_index).unwrap();
             self.write_string(column.text.to_owned());
-            self.write_byte(column.raw_data_type);
+            self.write_u8(column.raw_data_type);
         }
 
         for row in &table.body {
@@ -188,7 +188,7 @@ impl DntFileWriter {
 
         let closing_text = String::from("THEND");
 
-        self.write_byte(closing_text.len() as u8);
+        self.write_u8(closing_text.len() as u8);
         self.write_string_bytes(closing_text);
 
         Ok(())
@@ -210,7 +210,7 @@ impl DntFileWriter {
         self.file.write_f32::<LittleEndian>(value).unwrap()
     }
 
-    fn write_byte(&mut self, value: u8) {
+    fn write_u8(&mut self, value: u8) {
         self.file.write_u8(value).unwrap()
     }
 
@@ -221,7 +221,7 @@ impl DntFileWriter {
 
     fn write_string_bytes(&mut self, value: String) {
         for index in 0..value.len() {
-            self.write_byte(value.chars().nth(index as usize).unwrap() as u8);
+            self.write_u8(value.chars().nth(index as usize).unwrap() as u8);
         }
     }
 }
